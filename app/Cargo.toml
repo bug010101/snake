@@ -10,3 +10,10 @@ path = "src/main.rs"
 [dependencies]
 macroquad = "0.4"
 snake-core = { path = "../core" }
+
+# wasm32 目标下，rand(rand_core/std) 会间接引入 getrandom。
+# 该目标默认既不启用 "js" 也不启用 "custom" 会编译失败；
+# 而开 "js" 会注入 wasm-bindgen 胶水，导致 mq_js_bundle.js 直接加载失败。
+# 因此用 "custom" 特性 + 在 main.rs 注册占位实现来绕过（运行时实际不会调用 getrandom）。
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["custom"] }

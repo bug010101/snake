@@ -4,6 +4,21 @@ use macroquad::text::measure_text;
 use macroquad::time::get_time;
 use snake_core::{Direction, Game, GRID};
 
+// wasm32 下 getrandom 必须提供自定义实现（"custom" 特性要求注册，且不能走会注入
+// wasm-bindgen 胶水的 "js" 特性，否则 mq_js_bundle.js 加载失败）。
+// 本游戏运行时不实际调用 getrandom（macroquad 用 quad-rand，蛇用 SmallRng 时间种子），
+// 这里仅提供占位实现以满足编译。
+#[cfg(target_arch = "wasm32")]
+mod wasm_getrandom {
+    fn fill(buf: &mut [u8]) -> Result<(), getrandom::Error> {
+        for b in buf.iter_mut() {
+            *b = 0x5a;
+        }
+        Ok(())
+    }
+    getrandom::register_custom_getrandom!(fill);
+}
+
 /// 用当前时间做随机种子（wasm 下也可用，不依赖 std::time）。
 fn seed() -> u64 {
     (get_time() * 1000.0) as u64
