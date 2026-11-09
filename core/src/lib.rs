@@ -173,6 +173,8 @@ mod tests {
     #[test]
     fn step_moves_and_keeps_length() {
         let mut g = Game::new(42);
+        // 固定食物到安全格，避免随机食物恰好落在前进方向导致“误判增长”
+        g.food = Cell::new(0, 0);
         let head = g.snake[0];
         g.step();
         assert_eq!(g.snake[0], head.add(Direction::Right.delta()));
@@ -194,6 +196,7 @@ mod tests {
     #[test]
     fn queue_allows_turn_then_perp() {
         let mut g = Game::new(2);
+        g.food = Cell::new(0, 0); // 固定食物，排除随机食物对转向流程的干扰
         g.set_direction(Direction::Up); // [Up]
         g.set_direction(Direction::Left); // [Up, Left]，Left 相对 Up 合法
         assert_eq!(g.queue.len(), 2);

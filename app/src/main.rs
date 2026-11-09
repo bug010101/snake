@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use macroquad::input::MouseButton;
 use macroquad::text::measure_text;
 use macroquad::time::get_time;
 use snake_core::{Direction, Game, GRID};
@@ -114,10 +115,10 @@ async fn main() {
             handle_keys(&mut game);
 
             // 触屏/鼠标滑动 = 转向（手机天然支持，桌面点击拖拽也行）
-            if is_mouse_pressed() {
+            if is_mouse_button_pressed(MouseButton::Left) {
                 swipe = Some(mouse_position());
             }
-            if is_mouse_released() {
+            if is_mouse_button_released(MouseButton::Left) {
                 if let Some((sx, sy)) = swipe.take() {
                     let (ex, ey) = mouse_position();
                     let (dx, dy) = (ex - sx, ey - sy);
@@ -152,7 +153,7 @@ async fn main() {
             }
         } else {
             swipe = None;
-            if is_key_pressed(KeyCode::Space) || is_mouse_pressed() {
+            if is_key_pressed(KeyCode::Space) || is_mouse_button_pressed(MouseButton::Left) {
                 game = Game::new(seed());
                 acc = 0.0;
             }

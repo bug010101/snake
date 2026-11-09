@@ -9,4 +9,4 @@ path = "src/main.rs"
 
 [dependencies]
 macroquad = "0.4"
-snake_core = { path = "../core" }
+snake-core = { path = "../core" }

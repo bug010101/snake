@@ -8,4 +8,6 @@ name = "snake_core"
 path = "src/lib.rs"
 
 [dependencies]
-rand = "0.8"
+# 关闭默认特性（含 std_rng -> getrandom），否则 wasm 目标编译失败；
+# 仅开启 small_rng + std 即可满足 SmallRng/SeedableRng/gen_range。
+rand = { version = "0.8", default-features = false, features = ["small_rng", "std"] }
