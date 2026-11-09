@@ -1,0 +1,71 @@
+name: Build & Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+
+      - name: Run unit tests (core logic)
+        run: cargo test -p snake-core
+
+      # 只检查纯逻辑 crate：app(macroquad) 在 Linux 原生编译需要 X11/ALSA 等系统库，
+      # 而 ubuntu-latest 未安装，会失败；app 的可编译性由下面的 wasm 构建步骤保证。
+      - name: Clippy (core logic)
+        run: cargo clippy -p snake-core
+
+      - name: Build wasm
+        run: cargo build -p app --release --target wasm32-unknown-unknown
+
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p public
+          cp target/wasm32-unknown-unknown/release/app.wasm public/app.wasm
+          cp index.html public/index.html
+          cp mq_js_bundle.js public/mq_js_bundle.js
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
